@@ -15,9 +15,9 @@ overlay_options = [
 ]
 
 timezone_options = [
-    [InlineKeyboardButton("🌎 LATAM", callback_data='business_trip_latam')],
-    [InlineKeyboardButton("🌍 AFRICA", callback_data='business_trip_africa')],
-    [InlineKeyboardButton("🇵🇰 PAKISTAN", callback_data='business_trip_pakistan')],
+    [InlineKeyboardButton("🌎 LATAM (MSK –8)", callback_data='business_trip_latam')],
+    [InlineKeyboardButton("🌍 AFRICA (MSK –3)", callback_data='business_trip_africa')],
+    [InlineKeyboardButton("🇵🇰 PAKISTAN (MSK +2)", callback_data='business_trip_pakistan')],
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -31,7 +31,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "business_trip":
         await query.message.reply_text("Choose a time zone:", reply_markup=InlineKeyboardMarkup(timezone_options))
     elif query.data == "vacation":
-        user_state[user_id] = "awaiting_vacation_date"
+        user_state[user_id] = "vacation_waiting_date"
         await query.message.reply_text("Until what date? (e.g., 15.06)")
     else:
         user_state[user_id] = query.data
@@ -39,7 +39,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-    if user_state.get(user_id) == "awaiting_vacation_date":
+    current_state = user_state.get(user_id)
+
+    if current_state == "vacation_waiting_date":
         user_state[user_id] = "vacation"
         user_temp_data[user_id] = {"date": update.message.text.strip()}
         await update.message.reply_text("Thanks! Now send me your photo.")
@@ -83,7 +85,7 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     overlay = Image.open(overlay_path).convert("RGBA").resize(user_img.size)
     combined = Image.alpha_composite(user_img, overlay)
 
-    # Add vacation date text if applicable
+    # Vacation: add date text if available
     if overlay_type == "vacation":
         vacation_data = user_temp_data.get(user_id, {})
         date_text = vacation_data.get("date")
