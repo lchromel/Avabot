@@ -1,13 +1,13 @@
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import io
 import os
 
 user_state = {}
+user_temp_data = {}
 
-# Menu options
 overlay_options = [
     [InlineKeyboardButton("🛌 Day Off", callback_data='day_off')],
     [InlineKeyboardButton("🏖 Vacation", callback_data='vacation')],
@@ -15,10 +15,9 @@ overlay_options = [
 ]
 
 timezone_options = [
-    [InlineKeyboardButton("🌍 UTC", callback_data='business_trip_utc')],
-    [InlineKeyboardButton("🇦🇪 Dubai (+4)", callback_data='business_trip_dubai')],
-    [InlineKeyboardButton("🇷🇺 Moscow (+3)", callback_data='business_trip_moscow')],
-    [InlineKeyboardButton("🇺🇸 New York (-4)", callback_data='business_trip_ny')],
+    [InlineKeyboardButton("🌎 LATAM", callback_data='business_trip_latam')],
+    [InlineKeyboardButton("🌍 AFRICA", callback_data='business_trip_africa')],
+    [InlineKeyboardButton("🇵🇰 PAKISTAN", callback_data='business_trip_pakistan')],
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -31,29 +30,49 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "business_trip":
         await query.message.reply_text("Choose a time zone:", reply_markup=InlineKeyboardMarkup(timezone_options))
+    elif query.data == "vacation":
+        user_state[user_id] = "vacation"
+        user_temp_data[user_id] = {}
+        await query.message.reply_text("Until what date? (e.g., 15.06)")
     else:
         user_state[user_id] = query.data
         await query.message.reply_text("Now send me your photo.")
 
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
+    if user_state.get(user_id) == "vacation" and "date" not in user_temp_data.get(user_id, {}):
+        user_temp_data[user_id]["date"] = update.message.text.strip()
+        await update.message.reply_text("Thanks! Now send me your photo.")
+    else:
+        await update.message.reply_text("Please choose avatar type first: /start")
+
+async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+
     if user_id not in user_state:
-        await update.message.reply_text("Please start with /start and choose an avatar type first.")
+        await update.message.reply_text("Please choose avatar type first: /start")
         return
 
-    photo_file = await update.message.photo[-1].get_file()
-    photo_bytes = await photo_file.download_as_bytearray()
+    if update.message.photo:
+        photo_file = await update.message.photo[-1].get_file()
+    elif update.message.document and update.message.document.mime_type.startswith("image/"):
+        photo_file = await update.message.document.get_file()
+    else:
+        await update.message.reply_text("Please send an image file or photo.")
+        return
 
+    photo_bytes = await photo_file.download_as_bytearray()
     user_img = Image.open(io.BytesIO(photo_bytes)).convert("RGBA")
 
     # Crop to square
     width, height = user_img.size
     min_dim = min(width, height)
-    left = (width - min_dim) // 2
-    top = (height - min_dim) // 2
-    right = left + min_dim
-    bottom = top + min_dim
-    user_img = user_img.crop((left, top, right, bottom))
+    user_img = user_img.crop((
+        (width - min_dim) // 2,
+        (height - min_dim) // 2,
+        (width + min_dim) // 2,
+        (height + min_dim) // 2
+    ))
 
     overlay_type = user_state[user_id]
     overlay_path = f"overlays/{overlay_type}.png"
@@ -62,20 +81,34 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Overlay '{overlay_type}' not found.")
         return
 
-    overlay = Image.open(overlay_path).convert("RGBA")
-    overlay = overlay.resize(user_img.size)
-
+    overlay = Image.open(overlay_path).convert("RGBA").resize(user_img.size)
     combined = Image.alpha_composite(user_img, overlay)
+
+    # Add vacation date text if applicable
+    if overlay_type == "vacation" and "date" in user_temp_data.get(user_id, {}):
+        draw = ImageDraw.Draw(combined)
+        font_size = int(combined.height * 0.08)
+        try:
+            font = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
+        text = f"Till {user_temp_data[user_id]['date']}"
+        text_width, text_height = draw.textsize(text, font=font)
+        x = (combined.width - text_width) // 2
+        y = int(combined.height * 0.85)
+        draw.text((x+2, y+2), text, font=font, fill="black")
+        draw.text((x, y), text, font=font, fill="white")
 
     output = io.BytesIO()
     output.name = "avatar.png"
     combined.save(output, "PNG")
     output.seek(0)
 
-    # Send as file (uncompressed)
     await update.message.reply_document(document=InputFile(output), filename="avatar.png")
 
-    # Show menu again
+    # Reset state
+    user_state.pop(user_id, None)
+    user_temp_data.pop(user_id, None)
     await update.message.reply_text("Avatar created! Want to try again?", reply_markup=InlineKeyboardMarkup(overlay_options))
 
 def main():
@@ -84,7 +117,8 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), text_handler))
+    app.add_handler(MessageHandler(filters.PHOTO | filters.Document.IMAGE, image_handler))
 
     app.run_polling()
 
