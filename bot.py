@@ -31,8 +31,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "business_trip":
         await query.message.reply_text("Choose a time zone:", reply_markup=InlineKeyboardMarkup(timezone_options))
     elif query.data == "vacation":
-        user_state[user_id] = "vacation"
-        user_temp_data[user_id] = {}
+        user_state[user_id] = "awaiting_vacation_date"
         await query.message.reply_text("Until what date? (e.g., 15.06)")
     else:
         user_state[user_id] = query.data
@@ -40,16 +39,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-    if user_state.get(user_id) == "vacation" and "date" not in user_temp_data.get(user_id, {}):
-        user_temp_data[user_id]["date"] = update.message.text.strip()
+    if user_state.get(user_id) == "awaiting_vacation_date":
+        user_state[user_id] = "vacation"
+        user_temp_data[user_id] = {"date": update.message.text.strip()}
         await update.message.reply_text("Thanks! Now send me your photo.")
     else:
         await update.message.reply_text("Please choose avatar type first: /start")
 
 async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
+    overlay_type = user_state.get(user_id)
 
-    if user_id not in user_state:
+    if not overlay_type:
         await update.message.reply_text("Please choose avatar type first: /start")
         return
 
@@ -74,9 +75,7 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         (height + min_dim) // 2
     ))
 
-    overlay_type = user_state[user_id]
     overlay_path = f"overlays/{overlay_type}.png"
-
     if not os.path.exists(overlay_path):
         await update.message.reply_text(f"Overlay '{overlay_type}' not found.")
         return
@@ -85,19 +84,22 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     combined = Image.alpha_composite(user_img, overlay)
 
     # Add vacation date text if applicable
-    if overlay_type == "vacation" and "date" in user_temp_data.get(user_id, {}):
-        draw = ImageDraw.Draw(combined)
-        font_size = int(combined.height * 0.08)
-        try:
-            font = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
-        except:
-            font = ImageFont.load_default()
-        text = f"Till {user_temp_data[user_id]['date']}"
-        text_width, text_height = draw.textsize(text, font=font)
-        x = (combined.width - text_width) // 2
-        y = int(combined.height * 0.85)
-        draw.text((x+2, y+2), text, font=font, fill="black")
-        draw.text((x, y), text, font=font, fill="white")
+    if overlay_type == "vacation":
+        vacation_data = user_temp_data.get(user_id, {})
+        date_text = vacation_data.get("date")
+        if date_text:
+            draw = ImageDraw.Draw(combined)
+            font_size = int(combined.height * 0.08)
+            try:
+                font = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
+            except:
+                font = ImageFont.load_default()
+            text = f"Till {date_text}"
+            text_width, text_height = draw.textsize(text, font=font)
+            x = (combined.width - text_width) // 2
+            y = int(combined.height * 0.85)
+            draw.text((x+2, y+2), text, font=font, fill="black")
+            draw.text((x, y), text, font=font, fill="white")
 
     output = io.BytesIO()
     output.name = "avatar.png"
@@ -106,9 +108,10 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_document(document=InputFile(output), filename="avatar.png")
 
-    # Reset state
+    # Reset user session
     user_state.pop(user_id, None)
     user_temp_data.pop(user_id, None)
+
     await update.message.reply_text("Avatar created! Want to try again?", reply_markup=InlineKeyboardMarkup(overlay_options))
 
 def main():
