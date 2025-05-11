@@ -150,7 +150,7 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def generate_ai_image(location: str) -> Image.Image:
     try:
-        prompt = f"Portrait of a fashionable animal tourist character visiting {location}. The animal is native or symbolic to the destination, but varies each time. The character wears fancy stylish, designer-inspired clothing. The character is accessorized with elegant sunglasses or rings or earrings or necklaces that match its unique look. Surrounded by a unexpected, whimsical lokal travel items or accessories — playful, imaginative, and different in every generation. Pixar-style 3D rendering, highly expressive face. Solid bright red background. Square 1:1 avatar format"
+        prompt = f"Portrait of a fashionable animal tourist character visiting {location} The animal is native or symbolic to the destination, but varies each time. The character wears fancy stylish, designer-inspired clothing. The character is accessorized with colored fashion sunglasses and other stylish accessories that match its unique look. Holding unexpected, whimsical {location} travel items or accessories — playful, imaginative, and different in every generation. Pixar-style 3D rendering, highly expressive face. Solid bright red background. Square 1:1 avatar format"
         
         logger.info(f"Generating AI image for location: {location}")
         logger.info(f"Using prompt: {prompt}")
