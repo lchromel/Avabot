@@ -41,7 +41,7 @@ timezone_options = [
     ],
     [
         InlineKeyboardButton("🇨🇴 COL", callback_data='business_trip_Colombia'),
-        InlineKeyboardButton("🇨🇮 CIV", callback_data='business_trip_Côte d\'Ivoire'),
+        InlineKeyboardButton("🇨🇮 CIV", callback_data='business_trip_Côte dIvoire'),
         InlineKeyboardButton("🇪🇹 ETH", callback_data='business_trip_Ethiopia'),
         InlineKeyboardButton("🇬🇭 GHA", callback_data='business_trip_Ghana')
     ],
@@ -60,12 +60,10 @@ timezone_options = [
     [
         InlineKeyboardButton("🇨🇩 COD", callback_data='business_trip_Congo'),
         InlineKeyboardButton("🇸🇳 SEN", callback_data='business_trip_Senegal'),
-        InlineKeyboardButton("🇹🇷 TUR", callback_data='business_trip_Türkiye'),
         InlineKeyboardButton("🇦🇪 UAE", callback_data='business_trip_UAE')
-    ],
-    [
         InlineKeyboardButton("🇿🇲 ZMB", callback_data='business_trip_Zambia')
-    ]
+    ],
+    
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
