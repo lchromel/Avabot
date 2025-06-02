@@ -60,10 +60,9 @@ timezone_options = [
     [
         InlineKeyboardButton("🇨🇩 COD", callback_data='business_trip_Congo'),
         InlineKeyboardButton("🇸🇳 SEN", callback_data='business_trip_Senegal'),
-        InlineKeyboardButton("🇦🇪 UAE", callback_data='business_trip_UAE')
+        InlineKeyboardButton("🇦🇪 UAE", callback_data='business_trip_UAE'),
         InlineKeyboardButton("🇿🇲 ZMB", callback_data='business_trip_Zambia')
-    ],
-    
+    ]
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
