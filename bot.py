@@ -33,9 +33,39 @@ main_menu_options = [
 ]
 
 timezone_options = [
-    [InlineKeyboardButton("🌎 LATAM (MSK –8)", callback_data='business_trip_latam')],
-    [InlineKeyboardButton("🌍 AFRICA (MSK –3)", callback_data='business_trip_africa')],
-    [InlineKeyboardButton("🇵🇰 PAKISTAN (MSK +2)", callback_data='business_trip_pakistan')],
+    [
+        InlineKeyboardButton("🇦🇴 AGO", callback_data='business_trip_Angola'),
+        InlineKeyboardButton("🇦🇿 AZE", callback_data='business_trip_Azerbaijan'),
+        InlineKeyboardButton("🇧🇴 BOL", callback_data='business_trip_Bolivia'),
+        InlineKeyboardButton("🇨🇲 CMR", callback_data='business_trip_Cameroon')
+    ],
+    [
+        InlineKeyboardButton("🇨🇴 COL", callback_data='business_trip_Colombia'),
+        InlineKeyboardButton("🇨🇮 CIV", callback_data='business_trip_Côte d\'Ivoire'),
+        InlineKeyboardButton("🇪🇹 ETH", callback_data='business_trip_Ethiopia'),
+        InlineKeyboardButton("🇬🇭 GHA", callback_data='business_trip_Ghana')
+    ],
+    [
+        InlineKeyboardButton("🇬🇹 GTM", callback_data='business_trip_Guatemala'),
+        InlineKeyboardButton("🇲🇦 MAR", callback_data='business_trip_Morocco'),
+        InlineKeyboardButton("🇲🇿 MOZ", callback_data='business_trip_Mozambique'),
+        InlineKeyboardButton("🇳🇦 NAM", callback_data='business_trip_Namibia')
+    ],
+    [
+        InlineKeyboardButton("🇳🇵 NPL", callback_data='business_trip_Nepal'),
+        InlineKeyboardButton("🇴🇲 OMN", callback_data='business_trip_Oman'),
+        InlineKeyboardButton("🇵🇰 PAK", callback_data='business_trip_Pakistan'),
+        InlineKeyboardButton("🇵🇪 PER", callback_data='business_trip_Peru')
+    ],
+    [
+        InlineKeyboardButton("🇨🇩 COD", callback_data='business_trip_Congo'),
+        InlineKeyboardButton("🇸🇳 SEN", callback_data='business_trip_Senegal'),
+        InlineKeyboardButton("🇹🇷 TUR", callback_data='business_trip_Türkiye'),
+        InlineKeyboardButton("🇦🇪 UAE", callback_data='business_trip_UAE')
+    ],
+    [
+        InlineKeyboardButton("🇿🇲 ZMB", callback_data='business_trip_Zambia')
+    ]
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
