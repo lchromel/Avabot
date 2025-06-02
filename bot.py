@@ -54,7 +54,7 @@ timezone_options = [
     [
         InlineKeyboardButton("🇳🇵 NPL", callback_data='business_trip_Nepal'),
         InlineKeyboardButton("🇴🇲 OMN", callback_data='business_trip_Oman'),
-        InlineKeyboardButton("🇵🇰 PAK", callback_data='business_trip_Pakistan'),
+        InlineKeyboardButton("🇵🇰 PAK", callback_data='business_trip_Pakistan1'),
         InlineKeyboardButton("🇵🇪 PER", callback_data='business_trip_Peru')
     ],
     [
